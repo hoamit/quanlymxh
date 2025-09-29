@@ -753,17 +753,21 @@
           const encryptedData = encryptData(data);
           
           // Sử dụng JSONBin.io để lưu trữ
-          const response = await fetch(`${API_BASE}/${userId}`, {
-            method: 'PUT',
+          const response = await fetch(`${API_BASE}`, {
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-Master-Key': API_KEY,
-              'X-Bin-Name': `social-accounts-${userId}`
+              'X-Bin-Name': `social-accounts-${userId}`,
+              'X-Private': 'true'
             },
             body: JSON.stringify({ data: encryptedData })
           });
 
           if (response.ok) {
+            const result = await response.json();
+            // Lưu bin ID để sử dụng sau này
+            localStorage.setItem('binId', result.metadata.id);
             localStorage.setItem('lastCloudSync', new Date().getTime().toString());
             showNotification('✅ Đã đồng bộ lên cloud thành công!', 'success');
           } else {
@@ -779,7 +783,15 @@
         try {
           showNotification('🔄 Đang tải dữ liệu từ cloud...', 'info');
           
-          const response = await fetch(`${API_BASE}/${userId}/latest`, {
+          // Tìm bin ID từ localStorage hoặc tạo mới
+          let binId = localStorage.getItem('binId');
+          
+          if (!binId) {
+            showNotification('⚠️ Chưa có dữ liệu trên cloud. Hãy đồng bộ trước.', 'info');
+            return;
+          }
+          
+          const response = await fetch(`${API_BASE}/${binId}/latest`, {
             headers: {
               'X-Master-Key': API_KEY
             }
