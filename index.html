@@ -730,8 +730,17 @@
 
       // Load accounts from localStorage on page load
       window.onload = function() {
-        // Try to load from cloud first
-        loadFromCloud();
+        // Load from localStorage first (immediate display)
+        const savedAccounts = localStorage.getItem('socialAccounts');
+        if (savedAccounts) {
+          accounts = JSON.parse(savedAccounts);
+          renderAccounts();
+        }
+        
+        // Then try to load from cloud (background)
+        setTimeout(() => {
+          loadFromCloud();
+        }, 1000);
         
         // Auto sync every 10 minutes
         setInterval(syncToCloud, 10 * 60 * 1000);
@@ -831,31 +840,29 @@
           
           if (data.length > 0) {
             const userData = JSON.parse(data[0].data);
-            accounts = userData.accounts;
-            saveAccounts();
-            renderAccounts();
-            showNotification(`✅ Đã tải ${accounts.length} tài khoản từ database!`, 'success');
-          } else {
-            // Fallback to localStorage if no cloud data
-            const savedAccounts = localStorage.getItem('socialAccounts');
-            if (savedAccounts) {
-              accounts = JSON.parse(savedAccounts);
+            const cloudAccounts = userData.accounts;
+            
+            // So sánh với dữ liệu local
+            const localAccounts = JSON.parse(localStorage.getItem('socialAccounts') || '[]');
+            
+            if (cloudAccounts.length > localAccounts.length) {
+              // Cloud có nhiều dữ liệu hơn -> cập nhật
+              accounts = cloudAccounts;
+              saveAccounts();
               renderAccounts();
-              showNotification('📱 Đã tải dữ liệu từ localStorage', 'info');
+              showNotification(`✅ Đã cập nhật ${accounts.length} tài khoản từ database!`, 'success');
+            } else if (cloudAccounts.length === localAccounts.length) {
+              // Dữ liệu giống nhau -> không cần cập nhật
+              showNotification('📱 Dữ liệu đã đồng bộ', 'info');
             } else {
-              showNotification('📭 Chưa có dữ liệu. Hãy thêm tài khoản đầu tiên!', 'info');
+              // Local có nhiều hơn -> không cập nhật
+              showNotification('📱 Dữ liệu local mới nhất', 'info');
             }
+          } else {
+            showNotification('📭 Chưa có dữ liệu trong database', 'info');
           }
         } else {
-          // Fallback to localStorage if API fails
-          const savedAccounts = localStorage.getItem('socialAccounts');
-          if (savedAccounts) {
-            accounts = JSON.parse(savedAccounts);
-            renderAccounts();
-            showNotification('📱 Đã tải dữ liệu từ localStorage (API lỗi)', 'info');
-          } else {
-            throw new Error('Load failed');
-          }
+          showNotification('⚠️ Không thể kết nối database', 'info');
         }
       }
 
