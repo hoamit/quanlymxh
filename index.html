@@ -228,24 +228,32 @@
         overflow: hidden;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         display: table;
-        table-layout: fixed;
+        table-layout: auto;
+        word-wrap: break-word;
       }
 
       th {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 20px;
+        padding: 15px 10px;
         text-align: left;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       td {
-        padding: 20px;
+        padding: 15px 10px;
         border-bottom: 1px solid #e1e5e9;
         color: #333;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 150px;
+        vertical-align: top;
       }
 
       tr:hover {
@@ -361,14 +369,16 @@
         }
         
         table {
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           display: table !important;
           width: 100% !important;
         }
         
         th, td {
-          padding: 15px 10px;
+          padding: 10px 5px;
           display: table-cell !important;
+          max-width: 120px;
+          font-size: 0.8rem;
         }
         
         .tab-content {
