@@ -447,6 +447,9 @@
           <button class="btn" onclick="viewDatabaseData()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white;">
             👁️ Xem Database
           </button>
+          <button class="btn" onclick="importFromDatabase()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white;">
+            📥 Import Từ DB
+          </button>
           <button class="btn" onclick="exportData()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
             📤 Xuất Dữ Liệu
           </button>
@@ -749,15 +752,31 @@
 
       // Load accounts from localStorage on page load
       window.onload = function() {
+        console.log('Page loaded, starting data load...');
+        
         // Load from localStorage first (immediate display)
         const savedAccounts = localStorage.getItem('socialAccounts');
+        console.log('LocalStorage data:', savedAccounts);
+        
         if (savedAccounts) {
-          accounts = JSON.parse(savedAccounts);
+          try {
+            accounts = JSON.parse(savedAccounts);
+            console.log('Loaded accounts from localStorage:', accounts.length);
+            renderAccounts();
+          } catch (e) {
+            console.error('Error parsing localStorage:', e);
+          }
+        }
+        
+        // Force render even if no data
+        if (accounts.length === 0) {
+          console.log('No local data, rendering empty state');
           renderAccounts();
         }
         
         // Then try to load from cloud (background)
         setTimeout(() => {
+          console.log('Attempting cloud load...');
           loadFromCloud();
         }, 1000);
         
@@ -1011,6 +1030,7 @@
       }
 
       function renderAccounts() {
+        console.log('Rendering accounts:', accounts.length);
         updateTabCounts();
         
         // Render all accounts tab
@@ -1026,6 +1046,8 @@
         // Render other tab
         const otherAccounts = accounts.filter(acc => !['facebook', 'instagram', 'tiktok', 'youtube', 'twitter'].includes(acc.socialType));
         renderTabContent('other', otherAccounts, 'otherTableBody', 'otherEmptyState');
+        
+        console.log('Render completed');
       }
 
       function renderTabContent(tabName, accountsList, tbodyId, emptyStateId) {
@@ -1263,6 +1285,52 @@
         } catch (error) {
           console.error('View database error:', error);
           showNotification('❌ Lỗi tải dữ liệu từ database!', 'error');
+        }
+      }
+
+      async function importFromDatabase() {
+        try {
+          showNotification('🔄 Đang tải dữ liệu từ database...', 'info');
+          
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${userId}`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.length > 0) {
+              const userData = JSON.parse(data[0].data);
+              const cloudAccounts = userData.accounts;
+              
+              if (cloudAccounts.length > 0) {
+                // Merge với dữ liệu hiện tại (tránh duplicate)
+                const existingIds = new Set(accounts.map(acc => acc.uniqueId));
+                const newAccounts = cloudAccounts.filter(acc => !existingIds.has(acc.uniqueId));
+                
+                if (newAccounts.length > 0) {
+                  accounts = [...accounts, ...newAccounts];
+                  saveAccounts();
+                  renderAccounts();
+                  showNotification(`✅ Đã import ${newAccounts.length} tài khoản mới từ database!`, 'success');
+                } else {
+                  showNotification('📱 Tất cả tài khoản đã có trong danh sách!', 'info');
+                }
+              } else {
+                showNotification('📭 Database trống!', 'info');
+              }
+            } else {
+              showNotification('📭 Chưa có dữ liệu trong database!', 'info');
+            }
+          } else {
+            throw new Error('API failed');
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          showNotification('❌ Lỗi import từ database!', 'error');
         }
       }
     </script>
