@@ -436,9 +436,12 @@
         
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
           <div style="font-weight: 600; color: #667eea; margin-bottom: 10px;">🔐 Bảo mật dữ liệu</div>
-          <div style="font-size: 0.9rem; color: #666;">
+          <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
             Dữ liệu được mã hóa và lưu trữ an toàn trên cloud<br>
             Bạn có thể truy cập từ bất kỳ thiết bị nào
+          </div>
+          <div style="font-size: 0.8rem; color: #999; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 5px;">
+            💡 <strong>Setup:</strong> Vào jsonbin.io → Lấy API Key → Thay vào code
           </div>
         </div>
       </div>
@@ -695,7 +698,7 @@
       let accounts = [];
       let userId = localStorage.getItem('userId') || generateUserId();
       const API_BASE = 'https://api.jsonbin.io/v3/b'; // JSONBin.io API
-      const API_KEY = '$2a$10$YOUR_API_KEY_HERE'; // Thay bằng API key thật
+      const API_KEY = '$2a$10$7HOU1TjOGDf5zvC/LnwsR05L3Zbj2KZuUXjL4D0XiwdS14p0BGt4a'; // Master Key từ JSONBin.io
 
       function generateUserId() {
         const id = 'user_' + Math.random().toString(36).substr(2, 9);
