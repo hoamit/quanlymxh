@@ -709,7 +709,8 @@
       const DATABASE_MODE = 'supabase';
 
       function generateUserId() {
-        const id = 'user_' + Math.random().toString(36).substr(2, 9);
+        // Sử dụng User ID cố định để tất cả thiết bị dùng chung
+        const id = 'shared_user_hoamit';
         localStorage.setItem('userId', id);
         return id;
       }
@@ -810,38 +811,41 @@
 
       async function loadFromCloud() {
         try {
-          showNotification('🔄 Đang tải dữ liệu từ cloud...', 'info');
+          showNotification('🔄 Đang tải dữ liệu từ database...', 'info');
           
-          // Tìm bin ID từ localStorage hoặc tạo mới
-          let binId = localStorage.getItem('binId');
-          
-          if (!binId) {
-            showNotification('⚠️ Chưa có dữ liệu trên cloud. Hãy đồng bộ trước.', 'info');
-            return;
-          }
-          
-          const response = await fetch(`${API_BASE}/${binId}/latest`, {
-            headers: {
-              'X-Master-Key': API_KEY
-            }
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            const decryptedData = decryptData(result.record.data);
-            
-            if (decryptedData && decryptedData.accounts) {
-              accounts = decryptedData.accounts;
-              saveAccounts();
-              renderAccounts();
-              showNotification(`✅ Đã tải ${accounts.length} tài khoản từ cloud!`, 'success');
-            }
+          if (DATABASE_MODE === 'supabase') {
+            await loadFromSupabase();
           } else {
-            throw new Error('Load failed');
+            showNotification('⚠️ Chế độ local - không có cloud data.', 'info');
           }
         } catch (error) {
           console.error('Load error:', error);
-          showNotification('⚠️ Không thể tải từ cloud. Sử dụng dữ liệu local.', 'info');
+          showNotification('⚠️ Không thể tải từ database. Sử dụng dữ liệu local.', 'info');
+        }
+      }
+
+      async function loadFromSupabase() {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${userId}`, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.length > 0) {
+            const userData = JSON.parse(data[0].data);
+            accounts = userData.accounts;
+            saveAccounts();
+            renderAccounts();
+            showNotification(`✅ Đã tải ${accounts.length} tài khoản từ database!`, 'success');
+          } else {
+            showNotification('📭 Chưa có dữ liệu trong database. Hãy đồng bộ trước.', 'info');
+          }
+        } else {
+          throw new Error('Load failed');
         }
       }
 
