@@ -730,12 +730,6 @@
 
       // Load accounts from localStorage on page load
       window.onload = function() {
-        const savedAccounts = localStorage.getItem('socialAccounts');
-        if (savedAccounts) {
-          accounts = JSON.parse(savedAccounts);
-          renderAccounts();
-        }
-        
         // Try to load from cloud first
         loadFromCloud();
         
@@ -842,10 +836,26 @@
             renderAccounts();
             showNotification(`✅ Đã tải ${accounts.length} tài khoản từ database!`, 'success');
           } else {
-            showNotification('📭 Chưa có dữ liệu trong database. Hãy đồng bộ trước.', 'info');
+            // Fallback to localStorage if no cloud data
+            const savedAccounts = localStorage.getItem('socialAccounts');
+            if (savedAccounts) {
+              accounts = JSON.parse(savedAccounts);
+              renderAccounts();
+              showNotification('📱 Đã tải dữ liệu từ localStorage', 'info');
+            } else {
+              showNotification('📭 Chưa có dữ liệu. Hãy thêm tài khoản đầu tiên!', 'info');
+            }
           }
         } else {
-          throw new Error('Load failed');
+          // Fallback to localStorage if API fails
+          const savedAccounts = localStorage.getItem('socialAccounts');
+          if (savedAccounts) {
+            accounts = JSON.parse(savedAccounts);
+            renderAccounts();
+            showNotification('📱 Đã tải dữ liệu từ localStorage (API lỗi)', 'info');
+          } else {
+            throw new Error('Load failed');
+          }
         }
       }
 
