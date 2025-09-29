@@ -227,6 +227,8 @@
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        display: table;
+        table-layout: fixed;
       }
 
       th {
@@ -310,6 +312,7 @@
         display: none;
         padding: 0 40px 40px;
         background: white;
+        min-height: 200px;
       }
 
       .tab-content.active {
@@ -359,10 +362,26 @@
         
         table {
           font-size: 0.9rem;
+          display: table !important;
+          width: 100% !important;
         }
         
         th, td {
           padding: 15px 10px;
+          display: table-cell !important;
+        }
+        
+        .tab-content {
+          padding: 0 20px 20px !important;
+        }
+        
+        .tab-stats {
+          flex-direction: column;
+          gap: 10px;
+        }
+        
+        .stat-card {
+          min-width: auto;
         }
       }
     </style>
